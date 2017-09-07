@@ -1,8 +1,9 @@
 asd.npy
-firsttryB.npy
-firsttryW.npy
+firsttry*
 fortests.py
+data/*
 main.py
-__pycashe__
+__pycache__
+.idea/
 results/*
 results.zip

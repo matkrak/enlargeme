@@ -178,9 +178,20 @@ def loadCcrbmFromFile(filename):
 
     return rbm
 
+def displayFilters(rbm, fshape, itpl=False):
+    fig = plt.figure()
+
+    plt.subplot(fshape[0], fshape[1], 1)
+    for i in range(len(rbm.W)):
+        plt.subplot(fshape[0], fshape[1], i + 1)
+        if itpl:
+            plt.imshow(rbm.W[i], cmap='gray', interpolation='bilinear')
+        else:
+            plt.imshow(rbm.W[i], cmap='gray')
+    fig.show()
 
 def testRun():
-    rbm1 = CCRBM(64, 64, 30, (7, 7))
+    rbm1 = CCRBM(64, 64, 40, (5, 5))
     rbm1.dh.readBrainWebData(resize=True, size=(64, 64))
     rbm1.dh.normalize()
 
@@ -193,8 +204,8 @@ def testRun():
     for i in range(2):
         rbm1.PersistantCD(rbm1.dh.size, 10, 1e-7)
     for i in range(2):
-    rbm1.PersistantCD(rbm1.dh.size, 3, 1e-6)
-    for i in rage(2):
+        rbm1.PersistantCD(rbm1.dh.size, 3, 1e-6)
+    for i in range(2):
         rbm1.PersistantCD(rbm1.dh.size, 3, 1e-7)
 
     #rbm1.contrastiveDivergence(100, 1e-7)
@@ -219,6 +230,7 @@ def testRun():
     fig2.show()
 
     input()
+    return rbm1
 
 if __name__ == '__main__':
     testRun()

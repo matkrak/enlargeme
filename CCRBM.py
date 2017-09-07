@@ -178,8 +178,8 @@ def loadCcrbmFromFile(filename):
 
     return rbm
 
-if __name__ == '__main__':
 
+def testRun():
     rbm1 = CCRBM(64, 64, 30, (7, 7))
     rbm1.dh.readBrainWebData(resize=True, size=(64, 64))
     rbm1.dh.normalize()
@@ -190,11 +190,14 @@ if __name__ == '__main__':
     rbm1.sample_v_given_h()
     rbm1.displayV()
 
-    rbm1.PersistantCD(80, 10, 1e-6)
-    rbm1.PersistantCD(100, 3, 1e-7)
-    rbm1.PersistantCD(100, 3, 1e-7)
+    for i in range(2):
+        rbm1.PersistantCD(rbm1.dh.size, 10, 1e-7)
+    for i in range(2):
+    rbm1.PersistantCD(rbm1.dh.size, 3, 1e-6)
+    for i in rage(2):
+        rbm1.PersistantCD(rbm1.dh.size, 3, 1e-7)
 
-    rbm1.contrastiveDivergence(100, 1e-7)
+    #rbm1.contrastiveDivergence(100, 1e-7)
 
     rbm1.loadImage(rbm1.dh[0])
     rbm1.sample_h_given_v()
@@ -206,8 +209,18 @@ if __name__ == '__main__':
     for i in range(30):
         plt.subplot(6, 5, i + 1)
         plt.imshow(rbm1.W[i], cmap='gray')
-
     fig.show()
+
+    fig2 = plt.figure()
+    plt.subplot(6, 5, 1)
+    for i in range(30):
+        plt.subplot(6, 5, i + 1)
+        plt.imshow(rbm1.W[i], cmap='gray', interpolation='bilinear')
+    fig2.show()
+
     input()
+
+if __name__ == '__main__':
+    testRun()
 
 

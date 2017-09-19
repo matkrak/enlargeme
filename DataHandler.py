@@ -72,8 +72,9 @@ class DataHandler:
 
     def normalize(self):
         self.images = self.images.astype(np.float32)
-        self.normalizationParameters = (self.images.mean(), self.images.std())
+        self.normalizationParameters = [self.images.mean()]
         self.images -= self.normalizationParameters[0]
+        self.normalizationParameters.append(self.images.std())
         self.images /= self.normalizationParameters[1]
 
 

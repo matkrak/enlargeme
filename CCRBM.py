@@ -31,6 +31,7 @@ class CCRBM:
                              dtype=np.int8) for i in range(filters_no)]
         self.W = [np.random.normal(0, 0.05, conv_kernel) for i in range(filters_no)]
         #self.W[0] = np.zeros(conv_kernel)
+        #self.b = [np.random.normal(0, 0.05, (size_v - conv_kernel[0] + 1, size_h - conv_kernel[1] + 1)) for i in range(filters_no)]
         self.b = [np.random.normal(0, 0.05, (size_v - conv_kernel[0] + 1, size_h - conv_kernel[1] + 1)) for i in range(filters_no)]
         self.c = np.random.normal(0, 0.05, (size_v, size_h))
 
@@ -72,46 +73,73 @@ class CCRBM:
             mse += ((self.v - v0)**2).sum()
         return mse/batchSize
 
-    def contrastiveDivergence(self, iterations, lrate):
-        iter = 1
-        print('Iter: {}   MSE: {}'.format(iter, self.BatchMSE(steps=1)))
-        for image in self.dh:
-            iter += 1
-            if iter > iterations: break
-            self.loadImage(image)
-            v0 = np.copy(self.v)
-            #print('MSE before update: {}'.format(self.MSError(image)))
+    def contrastiveDivergence(self, iterations, lrate, batchSize=10):
+        bshape = (self.insize_v - self.conv_kernel[0] + 1, self.insize_h - self.conv_kernel[1] + 1)
+        cshape = (self.insize_v, self.insize_h)
+        print('Start    MSE: {}'.format(self.BatchMSE(steps=1)))
+        imgcounter=0
+        for iter in range(iterations):
 
-            pH0 = [sigmoid(convolve2d(self.v, flipped(self.W[k]), mode='valid') + self.b[k]) for k in range(self.filters_no)]
-            grad0 = [convolve2d(self.v, flipped(pH0[k]), mode='valid') for k in range(self.filters_no)]
-            self.h = [np.random.binomial(1, pH0[k]) for k in range(self.filters_no)]
+            dW = [np.zeros(shape=self.W[0].shape, dtype=np.float32) for i in range(self.filters_no)]
+            db = [np.zeros(shape=(self.insize_v - self.conv_kernel[0] + 1, self.insize_h - self.conv_kernel[1] + 1),
+                           dtype=np.float32) for i in range(self.filters_no)]
+            dc = np.zeros(shape=cshape)
 
-            self.sample_v_given_h()
+            for batchidx in range(batchSize):
+                if imgcounter == self.dh.size:
+                    print('All dataset has been used, staring from 0 again.')
+                    imgcounter = 0
 
-            pH1 = [sigmoid(convolve2d(self.v, flipped(self.W[k]), mode='valid') + self.b[k]) for k in range(self.filters_no)]
-            grad1 = [convolve2d(self.v, flipped(pH1[k]), mode='valid') for k in range(self.filters_no)]
+                self.loadImage(self.dh[imgcounter])
+                imgcounter += 1
 
-            #print('W:{} grad0:{} grad1:{}'.format(self.W[0].shape, grad0[0].shape, grad1[0].shape))
+                v0 = np.copy(self.v)
+                #print('MSE before update: {}'.format(self.MSError(image)))
+
+                pH0 = [sigmoid(convolve2d(self.v, flipped(self.W[k]), mode='valid') + self.b[k]) for k in range(self.filters_no)]
+                grad0 = [convolve2d(self.v, flipped(pH0[k]), mode='valid') for k in range(self.filters_no)]
+                self.h = [np.random.binomial(1, pH0[k]) for k in range(self.filters_no)]
+
+                self.sample_v_given_h()
+
+                pH1 = [sigmoid(convolve2d(self.v, flipped(self.W[k]), mode='valid') + self.b[k]) for k in range(self.filters_no)]
+                grad1 = [convolve2d(self.v, flipped(pH1[k]), mode='valid') for k in range(self.filters_no)]
+
+                #print('W:{} grad0:{} grad1:{}'.format(self.W[0].shape, grad0[0].shape, grad1[0].shape))
+                for k in range(self.filters_no):
+                    # if k ==1 and not iter % 50: print('Iter {} delta(k=1): {}'.format(iter, delta))
+                    dW[k] += (grad0[k] - grad1[k])
+                    db[k] += (pH0[k] - pH1[k])
+                dc += (v0 - self.v)
+
             for k in range(self.filters_no):
-                delta = lrate * (grad0[k] - grad1[k])
-                # if k ==1 and not iter % 50: print('Iter {} delta(k=1): {}'.format(iter, delta))
-                self.W[k] += delta
-                self.b[k] += lrate * (pH0[k] - pH1[k])
-            self.c += lrate * (v0 - self.v)
+                self.W[k] += (lrate / batchSize) * dW[k]
+                self.b[k] += (lrate / batchSize) * db[k]
+            self.c += (lrate / batchSize) * dc
 
             #print('MSE after update: {}'.format(self.MSError(image)))
             if not iter % 10:
                 print('Iter: {}   MSE: {}'.format(iter, self.BatchMSE(steps=1)))
-        if iter % 50:
-            print('Iter: {}   BatchMSE: {}'.format(iter, self.BatchMSE()))
 
-    def PersistantCD(self, iterations, pcdSteps, lrate):
-        iter = 0
-        print('Iter: {}   MSE: {}'.format(iter, self.BatchMSE(steps=1)))
-        for image in self.dh:
-            iter += 1
-            if iter > iterations: break
-            self.loadImage(image)
+    def PersistantCD(self, iterations, pcdSteps, lrate, monitor=10):
+        bshape = (self.insize_v - self.conv_kernel[0] + 1, self.insize_h - self.conv_kernel[1] + 1)
+        cshape = (self.insize_v, self.insize_h)
+        print('Start   MSE: {}'.format(self.BatchMSE(steps=1)))
+        imgcounter = 0
+        for iter in range(iterations):
+
+            dW = [np.zeros(shape=self.W[0].shape, dtype=np.float32) for i in range(self.filters_no)]
+            db = [np.zeros(shape=(self.insize_v - self.conv_kernel[0] + 1, self.insize_h - self.conv_kernel[1] + 1),
+                           dtype=np.float32) for i in range(self.filters_no)]
+            dc = np.zeros(shape=cshape)
+
+            if imgcounter == self.dh.size:
+                print('All dataset has been used, staring from 0 again.')
+                imgcounter = 0
+
+            self.loadImage(self.dh[imgcounter])
+            imgcounter += 1
+
             for pcd in range(pcdSteps):
                 if pcd == 0:
                     v0 = np.copy(self.v)
@@ -128,19 +156,20 @@ class CCRBM:
 
                 # print('W:{} grad0:{} grad1:{}'.format(self.W[0].shape, grad0[0].shape, grad1[0].shape))
                 for k in range(self.filters_no):
-                    delta = lrate * (grad0[k] - grad1[k])
                     #if k ==1 and pcd == 0 : print('Iter {} delta.mean(k=1): {}, W.mean(k=1) : {}'.format(iter, delta.mean(), self.W[k].mean()))
-                    self.W[k] += delta
-                    self.b[k] += lrate * (pH0[k] - pH1[k])
-                self.c += lrate * (v0 - self.v)
+                    dW[k] += (grad0[k] - grad1[k])
+                    db[k] += (pH0[k] - pH1[k])
+                dc += (v0 - self.v)
 
-                # print('MSE after update: {}'.format(self.MSError(image)))
-                # if not pcd % 10:
-                #     print('pcd: {}   MSE: {}'.format(pcd, self.BatchMSE(steps=1)))
-            if not iter % 10:
+            for k in range(self.filters_no):
+                self.W[k] += (lrate / pcdSteps) * dW[k]
+                self.b[k] += (lrate / pcdSteps) * db[k]
+            self.c += (lrate / pcdSteps) * dc
+
+            if not iter % monitor:
                 print('Iter: {}   MSE: {}'.format(iter, self.BatchMSE(steps=1)))
-        if iter % 50:
-            print('Iter: {}   BatchMSE: {}'.format(iter, self.BatchMSE()))
+        if iter % monitor:
+            print('Iter: {}   BatchMSE: {}'.format(iter, self.BatchMSE(steps=1)))
 
     def loadImage(self, image):
         if image.shape != self.v.shape:
@@ -232,7 +261,30 @@ def testRun():
     input()
     return rbm1
 
+def cdBatchTest():
+    rbm1 = CCRBM(64, 64, 40, (5, 5))
+    rbm1.dh.readBrainWebData(resize=True, size=(64, 64))
+    rbm1.dh.normalize()
+
+    rbm1.contrastiveDivergence(50, 1e-6, 10)
+    return rbm1 #for ipython testing purpose
+
+def pcdBatchTest():
+    rbm1 = CCRBM(64, 64, 40, (5, 5))
+    rbm1.dh.readBrainWebData(resize=True, size=(64, 64))
+    rbm1.dh.normalize()
+
+    rbm1.PersistantCD(50, 10, 1e-7)
+    rbm1.PersistantCD(100, 5, 1e-6)
+    rbm1.PersistantCD(50, 10, 1e-7)
+
+    displayFilters(rbm1, (8, 5), False)
+    displayFilters(rbm1, (8, 5), True)
+
+    return rbm1 #for ipython testing purpose
+
 if __name__ == '__main__':
+
     testRun()
 
 

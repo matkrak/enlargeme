@@ -30,11 +30,10 @@ class CCRBM:
         self.h = [np.ndarray((size_v - conv_kernel[0] + 1, size_h - conv_kernel[1] + 1),
                              dtype=np.int8) for i in range(filters_no)]
         self.W = [np.random.normal(0, 0.05, conv_kernel) for i in range(filters_no)]
-        #self.W[0] = np.zeros(conv_kernel)
-        #self.b = [np.random.normal(0, 0.05, (size_v - conv_kernel[0] + 1, size_h - conv_kernel[1] + 1)) for i in range(filters_no)]
-        self.b = [np.random.normal(0, 0.05, (size_v - conv_kernel[0] + 1, size_h - conv_kernel[1] + 1)) for i in range(filters_no)]
-        self.c = np.random.normal(0, 0.05, (size_v, size_h))
-
+        # self.b = [np.random.normal(0, 0.05, (size_v - conv_kernel[0] + 1, size_h - conv_kernel[1] + 1)) for i in range(filters_no)]
+        # self.c = np.random.normal(0, 0.05, (size_v, size_h))
+        self.b = [np.random.normal(0, 0.05) for i in range(filters_no)]
+        self.c = np.random.normal(0, 0.05)
         self.dh = DataHandler.DataHandler()
 
     def sample_h_given_v(self):
@@ -73,7 +72,7 @@ class CCRBM:
             mse += ((self.v - v0)**2).sum()
         return mse/batchSize
 
-    def contrastiveDivergence(self, iterations, lrate, batchSize=10):
+    def contrastiveDivergence(self, iterations, lrate, batchSize=10, monitor=False):
         bshape = (self.insize_v - self.conv_kernel[0] + 1, self.insize_h - self.conv_kernel[1] + 1)
         cshape = (self.insize_v, self.insize_h)
         print('Start    MSE: {}'.format(self.BatchMSE(steps=1)))
@@ -81,9 +80,8 @@ class CCRBM:
         for iter in range(iterations):
 
             dW = [np.zeros(shape=self.W[0].shape, dtype=np.float32) for i in range(self.filters_no)]
-            db = [np.zeros(shape=(self.insize_v - self.conv_kernel[0] + 1, self.insize_h - self.conv_kernel[1] + 1),
-                           dtype=np.float32) for i in range(self.filters_no)]
-            dc = np.zeros(shape=cshape)
+            db = [0 for i in range(self.filters_no)]
+            dc = 0
 
             for batchidx in range(batchSize):
                 if imgcounter == self.dh.size:
@@ -109,8 +107,8 @@ class CCRBM:
                 for k in range(self.filters_no):
                     # if k ==1 and not iter % 50: print('Iter {} delta(k=1): {}'.format(iter, delta))
                     dW[k] += (grad0[k] - grad1[k])
-                    db[k] += (pH0[k] - pH1[k])
-                dc += (v0 - self.v)
+                    db[k] += (pH0[k] - pH1[k]).sum()
+                dc += (v0 - self.v).sum()
 
             for k in range(self.filters_no):
                 self.W[k] += (lrate / batchSize) * dW[k]
@@ -129,9 +127,8 @@ class CCRBM:
         for iter in range(iterations):
 
             dW = [np.zeros(shape=self.W[0].shape, dtype=np.float32) for i in range(self.filters_no)]
-            db = [np.zeros(shape=(self.insize_v - self.conv_kernel[0] + 1, self.insize_h - self.conv_kernel[1] + 1),
-                           dtype=np.float32) for i in range(self.filters_no)]
-            dc = np.zeros(shape=cshape)
+            db = [0 for i in range(self.filters_no)]
+            dc = 0
 
             if imgcounter == self.dh.size:
                 print('All dataset has been used, staring from 0 again.')
@@ -158,8 +155,8 @@ class CCRBM:
                 for k in range(self.filters_no):
                     #if k ==1 and pcd == 0 : print('Iter {} delta.mean(k=1): {}, W.mean(k=1) : {}'.format(iter, delta.mean(), self.W[k].mean()))
                     dW[k] += (grad0[k] - grad1[k])
-                    db[k] += (pH0[k] - pH1[k])
-                dc += (v0 - self.v)
+                    db[k] += (pH0[k] - pH1[k]).sum()
+                dc += (v0 - self.v).sum()
 
             for k in range(self.filters_no):
                 self.W[k] += (lrate / pcdSteps) * dW[k]
@@ -182,6 +179,18 @@ class CCRBM:
         else:
             im = Image.fromarray(self.v)
         im.show()
+
+    def displayFilters(self, fshape, itpl=False):
+        fig = plt.figure()
+
+        plt.subplot(fshape[0], fshape[1], 1)
+        for i in range(len(self.W)):
+            plt.subplot(fshape[0], fshape[1], i + 1)
+            if itpl:
+                plt.imshow(self.W[i], cmap='gray', interpolation='bilinear')
+            else:
+                plt.imshow(self.W[i], cmap='gray')
+        fig.show()
 
     def saveToFile(self, filename):
         toBeSaved = []
@@ -207,84 +216,8 @@ def loadCcrbmFromFile(filename):
 
     return rbm
 
-def displayFilters(rbm, fshape, itpl=False):
-    fig = plt.figure()
-
-    plt.subplot(fshape[0], fshape[1], 1)
-    for i in range(len(rbm.W)):
-        plt.subplot(fshape[0], fshape[1], i + 1)
-        if itpl:
-            plt.imshow(rbm.W[i], cmap='gray', interpolation='bilinear')
-        else:
-            plt.imshow(rbm.W[i], cmap='gray')
-    fig.show()
-
-def testRun():
-    rbm1 = CCRBM(64, 64, 40, (5, 5))
-    rbm1.dh.readBrainWebData(resize=True, size=(64, 64))
-    rbm1.dh.normalize()
-
-    Image.fromarray(rbm1.dh[0]).show()
-    rbm1.loadImage(rbm1.dh[0])
-    rbm1.sample_h_given_v()
-    rbm1.sample_v_given_h()
-    rbm1.displayV()
-
-    for i in range(2):
-        rbm1.PersistantCD(rbm1.dh.size, 10, 1e-7)
-    for i in range(2):
-        rbm1.PersistantCD(rbm1.dh.size, 3, 1e-6)
-    for i in range(2):
-        rbm1.PersistantCD(rbm1.dh.size, 3, 1e-7)
-
-    #rbm1.contrastiveDivergence(100, 1e-7)
-
-    rbm1.loadImage(rbm1.dh[0])
-    rbm1.sample_h_given_v()
-    rbm1.sample_v_given_h()
-    rbm1.displayV()
-
-    fig = plt.figure()
-    plt.subplot(6, 5, 1)
-    for i in range(30):
-        plt.subplot(6, 5, i + 1)
-        plt.imshow(rbm1.W[i], cmap='gray')
-    fig.show()
-
-    fig2 = plt.figure()
-    plt.subplot(6, 5, 1)
-    for i in range(30):
-        plt.subplot(6, 5, i + 1)
-        plt.imshow(rbm1.W[i], cmap='gray', interpolation='bilinear')
-    fig2.show()
-
-    input()
-    return rbm1
-
-def cdBatchTest():
-    rbm1 = CCRBM(64, 64, 40, (5, 5))
-    rbm1.dh.readBrainWebData(resize=True, size=(64, 64))
-    rbm1.dh.normalize()
-
-    rbm1.contrastiveDivergence(50, 1e-6, 10)
-    return rbm1 #for ipython testing purpose
-
-def pcdBatchTest():
-    rbm1 = CCRBM(64, 64, 40, (5, 5))
-    rbm1.dh.readBrainWebData(resize=True, size=(64, 64))
-    rbm1.dh.normalize()
-
-    rbm1.PersistantCD(50, 10, 1e-7)
-    rbm1.PersistantCD(100, 5, 1e-6)
-    rbm1.PersistantCD(50, 10, 1e-7)
-
-    displayFilters(rbm1, (8, 5), False)
-    displayFilters(rbm1, (8, 5), True)
-
-    return rbm1 #for ipython testing purpose
-
 if __name__ == '__main__':
+    print('What can I do for you?')
 
-    testRun()
 
 

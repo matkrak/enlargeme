@@ -72,11 +72,14 @@ class CCRBM:
             mse += ((self.v - v0)**2).sum()
         return mse/batchSize
 
-    def contrastiveDivergence(self, iterations, lrate, batchSize=10, monitor=False):
-        bshape = (self.insize_v - self.conv_kernel[0] + 1, self.insize_h - self.conv_kernel[1] + 1)
-        cshape = (self.insize_v, self.insize_h)
-        print('Start    MSE: {}'.format(self.BatchMSE(steps=1)))
+    def contrastiveDivergence(self, iterations, lrate, batchSize=10, monitor=10):
+        # bshape = (self.insize_v - self.conv_kernel[0] + 1, self.insize_h - self.conv_kernel[1] + 1)
+        # cshape = (self.insize_v, self.insize_h)
+        mse = []
+        print('Starting Contrastive Divergence with following parameters:\n'\
+              'iterations = {}, learnig rate = {}, batch size = {}, monitor = {}'.format(iterations, lrate, batchSize, monitor))
         imgcounter=0
+
         for iter in range(iterations):
 
             dW = [np.zeros(shape=self.W[0].shape, dtype=np.float32) for i in range(self.filters_no)]
@@ -116,13 +119,22 @@ class CCRBM:
             self.c += (lrate / batchSize) * dc
 
             #print('MSE after update: {}'.format(self.MSError(image)))
-            if not iter % 10:
-                print('Iter: {}   MSE: {}'.format(iter, self.BatchMSE(steps=1)))
+            if not iter % monitor:
+                mse.append((iter, self.BatchMSE(steps=1)))
+                print('Iter: {}   MSE: {}'.format(*mse[-1]))
+
+        if mse[-1][0] != iterations:
+            mse.append((iter, self.BatchMSE(steps=1)))
+            print('Iter: {}   MSE: {}'.format(*mse[-1]))
+        return mse
 
     def PersistantCD(self, iterations, pcdSteps, lrate, monitor=10):
-        bshape = (self.insize_v - self.conv_kernel[0] + 1, self.insize_h - self.conv_kernel[1] + 1)
-        cshape = (self.insize_v, self.insize_h)
-        print('Start   MSE: {}'.format(self.BatchMSE(steps=1)))
+        # bshape = (self.insize_v - self.conv_kernel[0] + 1, self.insize_h - self.conv_kernel[1] + 1)
+        # cshape = (self.insize_v, self.insize_h)
+        mse = []
+        print('Starting Contrastive Divergence with following parameters:\n' \
+              'iterations = {}, pcd steps = {}, learning rate = {}, monitor = {}'.format(iterations, pcdSteps, lrate,
+                                                                                         monitor))
         imgcounter = 0
         for iter in range(iterations):
 
@@ -164,9 +176,12 @@ class CCRBM:
             self.c += (lrate / pcdSteps) * dc
 
             if not iter % monitor:
-                print('Iter: {}   MSE: {}'.format(iter, self.BatchMSE(steps=1)))
-        if iter % monitor:
-            print('Iter: {}   BatchMSE: {}'.format(iter, self.BatchMSE(steps=1)))
+                mse.append((iter, self.BatchMSE(steps=1)))
+                print('Iter: {}   MSE: {}'.format(*mse[-1]))
+        if mse[-1][0] != iterations:
+            mse.append((iter, self.BatchMSE(steps=1)))
+            print('Iter: {}   MSE: {}'.format(*mse[-1]))
+        return mse
 
     def loadImage(self, image):
         if image.shape != self.v.shape:

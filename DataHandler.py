@@ -1,7 +1,6 @@
 import numpy as np
 from PIL import Image
 import struct
-import os
 import scipy.io as sio
 
 MNIST_TRAIN_LABELS = 'data/train-labels-idx1-ubyte/data'

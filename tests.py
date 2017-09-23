@@ -2,6 +2,12 @@ import CCRBM
 from PIL import Image
 import matplotlib.pyplot as plt
 
+def getRbm(imsize1=64, imsize2=64, filters=40, cfilter=(5, 5)):
+    rbm = CCRBM.CCRBM(imsize1, imsize2, filters, cfilter)
+    rbm.dh.readBrainWebData(resize=True, size=(imsize1, imsize2))
+    rbm.dh.normalize()
+    return rbm
+
 def testRun():
     rbm1 = CCRBM.CCRBM(64, 64, 40, (5, 5))
     rbm1.dh.readBrainWebData(resize=True, size=(64, 64))

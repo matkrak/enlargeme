@@ -52,7 +52,7 @@ class CCRBM:
         tmp += self.c
         self.v = np.random.normal(tmp, 0.01)
 
-    def MSError(self, image=None, steps=3):
+    def msError(self, image=None, steps=3):
         if image is not None:
             self.loadImage(image)
 
@@ -62,7 +62,7 @@ class CCRBM:
             self.sample_v_given_h()
         return ((self.v - v0)**2).sum()
 
-    def BatchMSE(self, batchSize=10, steps=3):
+    def batchMSE(self, batchSize=10, steps=3):
         if self.dh.images is None:
             raise ValueError('Data handler was not initialised, no source for images')
         mse = 0
@@ -98,7 +98,7 @@ class CCRBM:
                 imgcounter += 1
 
                 v0 = np.copy(self.v)
-                #print('MSE before update: {}'.format(self.MSError(image)))
+                #print('MSE before update: {}'.format(self.msError(image)))
 
                 pH0 = [sigmoid(convolve2d(self.v, flipped(self.W[k]), mode='valid') + self.b[k]) for k in range(self.filters_no)]
                 grad0 = [convolve2d(self.v, flipped(pH0[k]), mode='valid') for k in range(self.filters_no)]
@@ -121,21 +121,20 @@ class CCRBM:
 
             if not iter % monitor:
                 if not self.mse:
-                    self.mse.append((iter, self.BatchMSE(steps=1)))
+                    self.mse.append((iter, self.batchMSE(steps=1)))
                 elif self.mse[-1][0] != iter:
-                    self.mse.append((iter, self.BatchMSE(steps=1)))
+                    self.mse.append((iter, self.batchMSE(steps=1)))
                 print('Iter: {}   MSE: {}'.format(*self.mse[-1]))
         self.iterations += iterations
-        self.mse.append((self.iterations, self.BatchMSE(steps=1)))
+        self.mse.append((self.iterations, self.batchMSE(steps=1)))
         print('Iter: {}   MSE: {}'.format(*self.mse[-1]))
 
-    def PersistantCD(self, iterations, pcdSteps, lrate, monitor=10):
+    def persistantCD(self, iterations, lrate, pcdSteps=5, monitor=10):
         # bshape = (self.insize_v - self.conv_kernel[0] + 1, self.insize_h - self.conv_kernel[1] + 1)
         # cshape = (self.insize_v, self.insize_h)
         # mse = []
         print('Starting Contrastive Divergence with following parameters:\n' \
-              'iterations = {}, pcd steps = {}, learning rate = {}, monitor = {}'.format(iterations, pcdSteps, lrate,
-                                                                                         monitor))
+              'iterations = {}, learning rate = {}, pcd steps = {}, monitor = {}'.format(iterations, lrate, pcdSteps, monitor))
         imgcounter = 0
         for iter in range(self.iterations, self.iterations + iterations):
 
@@ -153,7 +152,7 @@ class CCRBM:
             for pcd in range(pcdSteps):
                 if pcd == 0:
                     v0 = np.copy(self.v)
-                #print('MSE before update: {}'.format(self.MSError(image)))
+                #print('MSE before update: {}'.format(self.msError(image)))
 
                 pH0 = [sigmoid(convolve2d(v0, flipped(self.W[k]), mode='valid') + self.b[k]) for k in range(self.filters_no)]
                 grad0 = [convolve2d(v0, flipped(pH0[k]), mode='valid') for k in range(self.filters_no)]
@@ -177,15 +176,14 @@ class CCRBM:
             self.c += (lrate / pcdSteps) * dc
 
             if not iter % monitor:
-                self.mse.append((iter, self.BatchMSE(steps=1)))
+                if not self.mse:
+                    self.mse.append((iter, self.batchMSE(steps=1)))
+                elif self.mse[-1][0] != iter:
+                    self.mse.append((iter, self.batchMSE(steps=1)))
                 print('Iter: {}   MSE: {}'.format(*self.mse[-1]))
-
-                self.mse.append((self.iterations, self.BatchMSE(steps=1)))
+        self.iterations += iterations
+        self.mse.append((self.iterations, self.batchMSE(steps=1)))
         print('Iter: {}   MSE: {}'.format(*self.mse[-1]))
-        # if self.mse[-1][0] != iterations:
-        #     self.mse.append((iter, self.BatchMSE(steps=1)))
-        #     print('Iter: {}   MSE: {}'.format(*self.mse[-1]))
-        # return self.mse
 
     def loadImage(self, image):
         if image.shape != self.v.shape:
@@ -235,7 +233,15 @@ class CCRBM:
         np.save(filename + 'MSE', self.mse)
 
 
-def loadCcrbmFromFile(filename):
+def getRbm(imsize1=64, imsize2=64, filters=40, cfilter=(5, 5), loadBWdata=True):
+    rbm = CCRBM(imsize1, imsize2, filters, cfilter)
+    if loadBWdata:
+        rbm.dh.readBrainWebData(resize=True, size=(imsize1, imsize2))
+        rbm.dh.normalize()
+    return rbm
+
+
+def loadCcrbmFromFile(filename, loadBWdata=True):
     data = np.load(filename + 'META.npy')
 
     rbm = CCRBM(data[0], data[1], data[2], (data[3], data[4]))
@@ -247,6 +253,9 @@ def loadCcrbmFromFile(filename):
     rbm.W = np.load(filename + 'W.npy')
     rbm.b = np.load(filename + 'B.npy')
     rbm.c = np.load(filename + 'C.npy')
+
+    rbm.dh.readBrainWebData(resize=True, size=(rbm.insize_h, rbm.insize_v))
+    rbm.dh.normalize()
 
     return rbm
 

@@ -2,17 +2,9 @@ import CCRBM
 from PIL import Image
 import matplotlib.pyplot as plt
 
-def getRbm(imsize1=64, imsize2=64, filters=40, cfilter=(5, 5)):
-    rbm = CCRBM.CCRBM(imsize1, imsize2, filters, cfilter)
-    rbm.dh.readBrainWebData(resize=True, size=(imsize1, imsize2))
-    rbm.dh.normalize()
-    return rbm
-
 
 def testRun():
-    rbm1 = CCRBM.CCRBM(64, 64, 40, (5, 5))
-    rbm1.dh.readBrainWebData(resize=True, size=(64, 64))
-    rbm1.dh.normalize()
+    rbm1 = CCRBM.getRbm()
 
     Image.fromarray(rbm1.dh[0]).show()
     rbm1.loadImage(rbm1.dh[0])
@@ -21,11 +13,11 @@ def testRun():
     rbm1.displayV()
 
     for i in range(2):
-        rbm1.PersistantCD(rbm1.dh.size, 10, 1e-7)
+        rbm1.PersistantCD(rbm1.dh.size,  1e-7, 10)
     for i in range(2):
-        rbm1.PersistantCD(rbm1.dh.size, 3, 1e-6)
+        rbm1.PersistantCD(rbm1.dh.size, 1e-6, 5)
     for i in range(2):
-        rbm1.PersistantCD(rbm1.dh.size, 3, 1e-7)
+        rbm1.PersistantCD(rbm1.dh.size, 1e-7, 3)
 
     rbm1.loadImage(rbm1.dh[0])
     rbm1.sample_h_given_v()
@@ -62,9 +54,9 @@ def pcdBatchTest():
     rbm1.dh.readBrainWebData(resize=True, size=(64, 64))
     rbm1.dh.normalize()
 
-    rbm1.PersistantCD(50, 10, 1e-7)
-    rbm1.PersistantCD(100, 5, 1e-6)
-    rbm1.PersistantCD(50, 10, 1e-7)
+    rbm1.PersistantCD(50, 1e-7, 10)
+    rbm1.PersistantCD(100, 1e-6, 10)
+    rbm1.PersistantCD(50, 1e-7, 10)
 
     rbm1.displayFilters((8, 5), False)
     rbm1.displayFilters((8, 5), True)

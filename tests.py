@@ -8,6 +8,7 @@ def getRbm(imsize1=64, imsize2=64, filters=40, cfilter=(5, 5)):
     rbm.dh.normalize()
     return rbm
 
+
 def testRun():
     rbm1 = CCRBM.CCRBM(64, 64, 40, (5, 5))
     rbm1.dh.readBrainWebData(resize=True, size=(64, 64))
@@ -25,8 +26,6 @@ def testRun():
         rbm1.PersistantCD(rbm1.dh.size, 3, 1e-6)
     for i in range(2):
         rbm1.PersistantCD(rbm1.dh.size, 3, 1e-7)
-
-    #rbm1.contrastiveDivergence(100, 1e-7)
 
     rbm1.loadImage(rbm1.dh[0])
     rbm1.sample_h_given_v()

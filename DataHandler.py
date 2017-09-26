@@ -1,7 +1,6 @@
 import numpy as np
 from PIL import Image
 import struct
-import os
 import scipy.io as sio
 
 MNIST_TRAIN_LABELS = 'data/train-labels-idx1-ubyte/data'
@@ -17,7 +16,6 @@ class DataHandler:
         self.shape = None
 
         self.normalizationParameters = None
-
         self.current_iter = None
 
 
@@ -79,17 +77,7 @@ class DataHandler:
 
 
 if __name__ == '__main__':
-    dh = DataHandler()
-    dh.readMNISTData(MNIST_TRAIN_IMAGES, MNIST_TRAIN_LABELS)
+    print('Tell me what to do')
 
-    i = 0
-    for img in dh:
-        i += 1
-        print(i)
-
-    i = 0
-    for img in dh:
-        i += 1
-        print(i)
 
 

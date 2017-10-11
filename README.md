@@ -20,8 +20,10 @@ For now I am working on training RBM that will have real-valued visible layer (a
 - [x] Compare scalar B and C version with master where there are matrices
 - [x] Try to combine both versions by first using scalar values and then matrices B and C (for more efficient learning)
 - [x] Implement decent test and train sets in DataHandler, improve normalization and measurements
+- [ ] Add logger
 - [ ] Implement momentum for contrastive divergence for faster filters training
 - [ ] Implement extra improvements mentioned in [2]
+- [ ] Write complete test cases to run on remote server
 - [ ] Keep README.md up to date
 - [ ] Make enalargeme a package that one can install with pip
 - [ ] add some CI like Jenkins or Travis

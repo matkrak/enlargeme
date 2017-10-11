@@ -17,8 +17,9 @@ For now I am working on training RBM that will have real-valued visible layer (a
 - [x] Implement learning with scalar B and C values
 - [x] Enable saving models to files and then loading it back to python
 - [x] Implement methods for testing current solutions, visualise filters, monitor mean square error
-- [ ] Compare scalar B and C version with master where there are matrices
-- [ ] Try to combine both versions by first using scalar values and then matrices B and C (for more efficient learning)
+- [x] Compare scalar B and C version with master where there are matrices
+- [x] Try to combine both versions by first using scalar values and then matrices B and C (for more efficient learning)
+- [x] Implement decent test and train sets in DataHandler, improve normalization and measurements
 - [ ] Implement momentum for contrastive divergence for faster filters training
 - [ ] Implement extra improvements mentioned in [2]
 - [ ] Keep README.md up to date

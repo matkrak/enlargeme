@@ -17,16 +17,17 @@ For now I am working on training RBM that will have real-valued visible layer (a
 - [x] Implement learning with scalar B and C values
 - [x] Enable saving models to files and then loading it back to python
 - [x] Implement methods for testing current solutions, visualise filters, monitor mean square error
-- [ ] Compare scalar B and C version with master where there are matrices
-- [ ] Try to combine both versions by first using scalar values and then matrices B and C (for more efficient learning)
+- [x] Compare scalar B and C version with master where there are matrices
+- [x] Try to combine both versions by first using scalar values and then matrices B and C (for more efficient learning)
 - [ ] Implement momentum for contrastive divergence for faster filters training
-- [ ] Implement extra improvements mentioned in [2]
+- [x] Implement extra improvements mentioned in [2]
 - [ ] Keep README.md up to date
 - [ ] Make enalargeme a package that one can install with pip
 - [ ] add some CI like Jenkins or Travis
 - [ ] suggestions?
 
 
+Recently I started zenBoard for this project and that is where futher imporovement can be found
 
 
 #### Usefull information 

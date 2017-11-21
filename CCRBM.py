@@ -19,6 +19,23 @@ def sigmoid(x):
         return 1 / (1 + np.exp(-x))
 
 
+def sigmoid2(x):
+    """More stable but slower version of sigmoid function
+    :param x: ndarray
+    :return: ndarray of sigmoids
+    """
+    res = np.ndarray(x.shape)
+    for i in range(0, x.shape[0]):
+        for j in range(0, x.shape[1]):
+            if x[i][j] > 30:
+                res[i][j] = 1
+            elif x[i][j] < -30:
+                res[i][j] = 0
+            else:
+                res[i][j] = 1 / (1 + np.exp(-x[i][j]))
+    return res
+
+
 class CCRBM:
     def __init__(self, size_v, size_h, filters_no, conv_kernel, typeB='scalar', typeC='matrix'):
         # RBM parameters
@@ -173,7 +190,7 @@ class CCRBM:
             for pcd in range(pcdSteps):
                 if pcd == 0:
                     v0 = np.copy(self.v)
-                #print('MSE before update: {}'.format(self.msError(image)))
+                # print('MSE before update: {}'.format(self.msError(image)))
 
                 pH0 = [sigmoid(convolve2d(v0, flipped(self.W[k]), mode='valid') + self.b[k]) for k in range(self.filters_no)]
                 grad0 = [convolve2d(v0, flipped(pH0[k]), mode='valid') for k in range(self.filters_no)]
@@ -186,7 +203,7 @@ class CCRBM:
 
                 # print('W:{} grad0:{} grad1:{}'.format(self.W[0].shape, grad0[0].shape, grad1[0].shape))
                 for k in range(self.filters_no):
-                    #if k ==1 and pcd == 0 : print('Iter {} delta.mean(k=1): {}, W.mean(k=1) : {}'.format(iter, delta.mean(), self.W[k].mean()))
+                    # if k ==1 and pcd == 0 : print('Iter {} delta.mean(k=1): {}, W.mean(k=1) : {}'.format(iter, delta.mean(), self.W[k].mean()))
                     dW[k] += (grad0[k] - grad1[k])
                     if self.typeB == 'scalar':
                         db[k] += (pH0[k] - pH1[k]).sum()

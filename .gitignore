@@ -1,7 +1,6 @@
 fortests.py
 data/*
 RBMs/*
-main.py
 __pycache__
 .idea/
 results/*

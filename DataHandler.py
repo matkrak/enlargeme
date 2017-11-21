@@ -1,7 +1,12 @@
 import numpy as np
 from PIL import Image
-import struct
+# import struct
 import scipy.io as sio
+
+import logging
+logger = logging.getLogger('root.' + __name__)
+logger.addHandler(logging.NullHandler())
+
 
 MNIST_TRAIN_LABELS = 'data/train-labels-idx1-ubyte/data'
 MNIST_TRAIN_IMAGES = 'data/train-images-idx3-ubyte/data'
@@ -44,6 +49,7 @@ class DataHandler:
             dims = (data.shape[2], data.shape[0], data.shape[1])
         else:
             if shape is None:
+                logger.error('[readBrainWebData] When resize is not None size arg must be provided!')
                 raise ValueError('When resize is not None size arg must be provided!')
             dims = (data.shape[2], shape[0], shape[1])
 
@@ -78,8 +84,9 @@ class DataHandler:
         print('Loaded Brainweb data. Image size: ' + str(self.shape))
         print('Trainset size: ' + str(self.tr_size))
         print('Tetset size:   ' + str(self.te_size))
+        logger.info('Loaded Brainweb data. Image size: {}, train set size: {}, test set size: {}'.format(self.shape, self.tr_size, self.te_size))
 
-    def normalize(self): # TODO look here cause this testset doesnt work for some reason
+    def normalize(self):  # TODO look here cause this test set doesnt work for some reason
 
         tmp_tr = np.ndarray(shape=(self.tr_size, *self.shape))
         tmp_te = np.ndarray(shape=(self.te_size, *self.shape))
@@ -109,6 +116,7 @@ class DataHandler:
         for i in range(self.te_size):
             self.test[i] = self.test[i] / self.normalParams['std_te']
 
+        logger.info('Successfully normalized data from DataHandler object.')
 
 if __name__ == '__main__':
     print('Tell me what to do')

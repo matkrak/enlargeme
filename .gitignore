@@ -5,3 +5,5 @@ main.py
 __pycache__
 .idea/
 results/*
+compare*
+testlog*

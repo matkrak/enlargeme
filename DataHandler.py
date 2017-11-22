@@ -86,7 +86,7 @@ class DataHandler:
         print('Tetset size:   ' + str(self.te_size))
         logger.info('Loaded Brainweb data. Image size: {}, train set size: {}, test set size: {}'.format(self.shape, self.tr_size, self.te_size))
 
-    def normalize(self):  # TODO look here cause this test set doesnt work for some reason
+    def normalize(self):
 
         tmp_tr = np.ndarray(shape=(self.tr_size, *self.shape))
         tmp_te = np.ndarray(shape=(self.te_size, *self.shape))
@@ -120,6 +120,7 @@ class DataHandler:
 
 if __name__ == '__main__':
     print('Tell me what to do')
+
 
 
 

@@ -1,5 +1,4 @@
 fortests.py
-data/*
 RBMs/*
 __pycache__
 .idea/

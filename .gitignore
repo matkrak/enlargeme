@@ -5,3 +5,5 @@ __pycache__
 results/*
 compare*
 testlog*
+data/t10k*
+data/train*

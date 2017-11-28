@@ -4,13 +4,14 @@ import DataHandler
 
 def compareMatrixScalar():
     rbms = []
-    rbms.append((CCRBM.CCRBM(64, 64, 40, (5, 5), 'scalar', 'scalar'), 'SS'))
-    rbms.append((CCRBM.CCRBM(64, 64, 40, (5, 5), 'scalar', 'matrix'), 'SM'))
-    rbms.append((CCRBM.CCRBM(64, 64, 40, (5, 5), 'matrix', 'matrix'), 'MM'))
-    rbms.append((CCRBM.CCRBM(64, 64, 40, (5, 5), 'matrix', 'scalar'), 'MS'))
+    rbms.append((CCRBM.CCRBM(78, 64, 40, (5, 5), 'scalar', 'scalar'), 'SS'))
+    rbms.append((CCRBM.CCRBM(78, 64, 40, (5, 5), 'scalar', 'matrix'), 'SM'))
+    rbms.append((CCRBM.CCRBM(78, 64, 40, (5, 5), 'matrix', 'matrix'), 'MM'))
+    rbms.append((CCRBM.CCRBM(78, 64, 40, (5, 5), 'matrix', 'scalar'), 'MS'))
 
     for r in rbms:
-        r[0].dh.readBrainWebData(resize=True, shape=(64, 64))
+        # r[0].dh.readBrainWebData(resize=True, shape=(64, 64))
+        r[0].dh.readnpy(resize=True, shape=(78, 64))
         r[0].dh.normalize()
         r[0].contrastiveDivergence(200, 2e-6, 10, 20)
         r[0].saveToFile('compare' + r[1])
@@ -19,10 +20,11 @@ def compareMatrixScalar():
 def compareFiltersNo():
     rbms = []
     for i in range(6):
-        rbms.append((CCRBM.CCRBM(64, 64, i * 10 + 10, (5, 5)), str(i * 10 + 10)))
-        rbms[i][0].dh.readBrainWebData(resize=True, shape=(64, 64))
+        rbms.append((CCRBM.CCRBM(78, 64, i * 10 + 10, (5, 5)), str(i * 10 + 10)))
+        # rbms[i][0].dh.readBrainWebData(resize=True, shape=(64, 64))
+        rbms[i][0].dh.readnpy(resize=True, shape=(78, 64))
         rbms[i][0].dh.normalize()
-        rbms[i][0].contrastiveDivergence(100, 1e-6, 10, 20)
+        rbms[i][0].contrastiveDivergence(200, 1e-6, 10, 20)
         rbms[i][0].saveToFile('compare' + rbms[i][1])
 
 

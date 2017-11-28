@@ -38,6 +38,8 @@ def sigmoid2(x):
     :param x: ndarray
     :return: ndarray of sigmoids
     """
+    if type(x) != 'np.ndarray' or (x.max() < 30 and x.min() > -30):
+        return sigmoid(x)
     res = np.ndarray(x.shape)
     for i in range(0, x.shape[0]):
         for j in range(0, x.shape[1]):
@@ -116,7 +118,7 @@ class CCRBM:
         """
         for feature_map in range(self.filters_no):
             tmp = convolve2d(self.v, flipped(self.W[feature_map]), mode='valid') + self.b[feature_map]
-            self.h[feature_map] = np.random.binomial(1, sigmoid(tmp))
+            self.h[feature_map] = np.random.binomial(1, sigmoid2(tmp))
 
     def sample_v_given_h(self):
         """
@@ -133,7 +135,7 @@ class CCRBM:
         Calculate activations probabilities for hidden layer given v.
         """
         for feature_map in range(self.filters_no):
-            self.h[feature_map] = sigmoid(
+            self.h[feature_map] = sigmoid2(
                 convolve2d(self.v, flipped(self.W[feature_map]), mode='valid') + self.b[feature_map])
 
     def prob_v_given_h(self):
@@ -203,14 +205,14 @@ class CCRBM:
                 v0 = np.copy(self.v)
                 # print('MSE before update: {}'.format(self.msError(image)))
 
-                pH0 = [sigmoid(convolve2d(self.v, flipped(self.W[k]), mode='valid') + self.b[k]) for k in
+                pH0 = [sigmoid2(convolve2d(self.v, flipped(self.W[k]), mode='valid') + self.b[k]) for k in
                        range(self.filters_no)]
                 grad0 = [convolve2d(self.v, flipped(pH0[k]), mode='valid') for k in range(self.filters_no)]
                 self.h = [np.random.binomial(1, pH0[k]) for k in range(self.filters_no)]
 
                 self.sample_v_given_h()
 
-                pH1 = [sigmoid(convolve2d(self.v, flipped(self.W[k]), mode='valid') + self.b[k]) for k in
+                pH1 = [sigmoid2(convolve2d(self.v, flipped(self.W[k]), mode='valid') + self.b[k]) for k in
                        range(self.filters_no)]
                 grad1 = [convolve2d(self.v, flipped(pH1[k]), mode='valid') for k in range(self.filters_no)]
 
@@ -279,14 +281,14 @@ class CCRBM:
                     v0 = np.copy(self.v)
                 # print('MSE before update: {}'.format(self.msError(image)))
 
-                pH0 = [sigmoid(convolve2d(v0, flipped(self.W[k]), mode='valid') + self.b[k]) for k in
+                pH0 = [sigmoid2(convolve2d(v0, flipped(self.W[k]), mode='valid') + self.b[k]) for k in
                        range(self.filters_no)]
                 grad0 = [convolve2d(v0, flipped(pH0[k]), mode='valid') for k in range(self.filters_no)]
                 self.h = [np.random.binomial(1, pH0[k]) for k in range(self.filters_no)]
 
                 self.sample_v_given_h()
 
-                pH1 = [sigmoid(convolve2d(self.v, flipped(self.W[k]), mode='valid') + self.b[k]) for k in
+                pH1 = [sigmoid2(convolve2d(self.v, flipped(self.W[k]), mode='valid') + self.b[k]) for k in
                        range(self.filters_no)]
                 grad1 = [convolve2d(self.v, flipped(pH1[k]), mode='valid') for k in range(self.filters_no)]
 

@@ -149,8 +149,11 @@ class DataHandler:
         if self.normalParams['normalized'] and not force:
             raise RuntimeWarning('Data already normalized! Use force is necessary ;)')
 
-        tmp_tr = np.ndarray(shape=(self.tr_size, *self.shape))
-        tmp_te = np.ndarray(shape=(self.te_size, *self.shape))
+        # tmp_tr = np.ndarray(shape=(self.tr_size, *self.shape))    # * expressions wont work with lower python verions
+        # tmp_te = np.ndarray(shape=(self.te_size, *self.shape))
+        tmp_tr = np.ndarray(shape=(self.tr_size, self.shape[0], self.shape[1]))
+        tmp_te = np.ndarray(shape=(self.te_size, self.shape[0], self.shape[1]))
+
         self.normalParams['means_tr'] = []
         self.normalParams['means_te'] = []
 

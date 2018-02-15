@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image
+import matplotlib.pyplot as plt
 # import struct
 import scipy.io as sio
 
@@ -198,6 +199,24 @@ class DataHandler:
 
     def imshow(self, idx, dataset='train', normalize=True):
         Image.fromarray(np.ndarray.astype(self.getimg(idx, dataset, normalize), 'int8')).show()
+
+    def displayImages(self, dataset='train', grid=(3, 3), normalize=True, startidx=0, title=True):
+        if (self.train if dataset == 'train' else self.test) is None:
+            raise RuntimeWarning('Trying to display from empty dh')
+        f = plt.figure()
+        for i in range(grid[0] * grid[1]):
+            if startidx + i >= (self.tr_size if dataset=='train' else self.te_size):
+                logger.warning('[DataHandler.displayImages] index out of range')
+                raise RuntimeWarning('[DataHandler.displayImages] index out of range')
+                break
+            plt.subplot(*grid, i + 1)
+            plt.imshow(Image.fromarray(self.getimg(startidx + i, dataset, normalize)))
+            if title:
+                plt.title('#' + str(startidx + i))
+        f.show()
+
+
+
 
 
 if __name__ == '__main__':

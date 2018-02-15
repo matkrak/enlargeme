@@ -376,13 +376,18 @@ class CCRBM:
             im = Image.fromarray(self.v)
         im.show()
 
-    def displayFilters(self, fshape, itpl=False):
+    def displayFilters(self, fshape=None, itpl=False):
         """
         Display filters of CCRBM.
         :param fshape: tuple, grid size. i.e. for 40 filters can be (8, 5)
         :param itpl: use bilinear interpolation or display raw pixels
         """
         fig = plt.figure()
+        if fshape is None:
+            tmp = np.ceil(np.sqrt(self.filters_no))
+            fshape = [tmp, tmp]
+            while fshape[0] * (fshape[1] - 1) >= self.filters_no:
+                fshape[1] -= 1
 
         plt.subplot(fshape[0], fshape[1], 1)
         for i in range(len(self.W)):
@@ -425,8 +430,24 @@ class CCRBM:
             pickle.dump(self, f)
         logger.info('Saved CCRBM {} to file: {}'.format(self, filename))
 
+    def present(self, imgno=0):
+        self.loadImage(imgno)
+        self.displayV()
 
-def getRbm(imsize1=64, imsize2=64, filters=40, cfilter=(5, 5), loadBWdata=True):
+        self.sample_h_given_v()
+        self.sample_v_given_h()
+        self.displayV()
+
+        self.loadImage(imgno)
+        self.prob_h_given_v()
+        self.prob_v_given_h()
+        self.displayV()
+
+        self.displayFilters()
+        self.plotMSE()
+
+
+def getRbm(imsize1=64, imsize2=64, filters=40, cfilter=(5, 5), loadData=True):
     """
     Get CCRBM, initialize DataHandler with brainweb data and normalize this data.
     Used for tests.
@@ -438,8 +459,8 @@ def getRbm(imsize1=64, imsize2=64, filters=40, cfilter=(5, 5), loadBWdata=True):
     :return: CCRBM object
     """
     rbm = CCRBM(imsize1, imsize2, filters, cfilter)
-    if loadBWdata:
-        rbm.dh.readBrainWebData(resize=True, shape=(imsize1, imsize2))
+    if loadData:
+        rbm.dh.readnpy(resize=True, shape=(imsize1, imsize2))
         rbm.dh.normalize()
     return rbm
 

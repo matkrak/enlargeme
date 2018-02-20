@@ -173,7 +173,7 @@ class CCRBM:
             mse += ((self.v - v0) ** 2).mean()
         return mse / batchSize
 
-    def contrastiveDivergence(self, iterations, lrate, momentum, batchSize=10, monitor=10):
+    def contrastiveDivergence(self, iterations, lrate, momentum, k=1, batchSize=10, monitor=10):
         """
         Contrastive divergence - 1 implemented with mini batch. Perform given number of iterations to train
         CCRBM with given learning rate. Use provided batchSize. Monitor MSE every X steps using monitor parameter.
@@ -186,10 +186,10 @@ class CCRBM:
         # cshape = (self.insize_v, self.insize_h)
 
         print('Starting Contrastive Divergence with following parameters:\n' \
-              'iterations = {}, learnig rate = {}, momentum = {}, batch size = {}, monitor = {}'.format(iterations, lrate, momentum, batchSize,
+              'iterations = {}, learnig rate = {}, momentum = {}, k = {}, batch size = {}, monitor = {}'.format(iterations, lrate, momentum, k, batchSize,
                                                                                          monitor))
         logger.info('Contrastive Divergence called for CCRBM: {}'.format(self) +
-                 'iterations = {}, learnig rate = {}, momentum = {}, batch size = {}, monitor = {}'.format(iterations, lrate, momentum, batchSize,
+                 'iterations = {}, learnig rate = {}, momentum = {}, k = {}, batch size = {}, monitor = {}'.format(iterations, lrate, momentum, k, batchSize,
                                                                                          monitor))
         imgcounter = 0
 
@@ -221,6 +221,9 @@ class CCRBM:
                 self.h = [np.random.binomial(1, pH0[k]) for k in range(self.filters_no)]
 
                 self.sample_v_given_h()
+                for i in range(k-1):
+                    self.sample_h_given_v()
+                    self.sample_v_given_h()
 
                 pH1 = [sigmoid2(convolve2d(self.v, flipped(self.W[k]), mode='valid') + self.b[k]) for k in
                        range(self.filters_no)]

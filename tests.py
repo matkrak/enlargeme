@@ -14,7 +14,7 @@ def compareMatrixScalar():
         # r[0].dh.readBrainWebData(resize=True, shape=(64, 64))
         r[0].dh.readnpy(resize=True, shape=(78, 64))
         r[0].dh.normalize()
-        r[0].contrastiveDivergence(200, 1e-6, 0, 10, 10)
+        r[0].contrastiveDivergence(200, 1e-6, 0, 1, 10, 10)
         r[0].saveToFile('compare2' + r[1])
 
 
@@ -25,7 +25,7 @@ def compareFiltersNo():
         # rbms[i][0].dh.readBrainWebData(resize=True, shape=(64, 64))
         rbms[i][0].dh.readnpy(resize=True, shape=(78, 64))
         rbms[i][0].dh.normalize()
-        rbms[i][0].contrastiveDivergence(200, 1e-6, 0, 10, 20)
+        rbms[i][0].contrastiveDivergence(200, 1e-6, 0, 1, 10, 20)
         rbms[i][0].saveToFile('compare2' + rbms[i][1])
 
 
@@ -37,7 +37,7 @@ def compareConvFilterSize():
         # rbms[i][0].dh.readBrainWebData(resize=True, shape=(64, 64))
         rbms[i][0].dh.readnpy(resize=True, shape=(78, 64))
         rbms[i][0].dh.normalize()
-        rbms[i][0].contrastiveDivergence(200, 1e-6, 0, 10, 20)
+        rbms[i][0].contrastiveDivergence(200, 1e-6, 0, 1, 10, 20)
         rbms[i][0].saveToFile('compareConvFilters' + rbms[i][1])
 
 
@@ -50,8 +50,37 @@ def compareMiniBatchSize():
         # rbms[i][0].dh.readBrainWebData(resize=True, shape=(64, 64))
         rbms[i][0].dh.readnpy(resize=True, shape=(78, 64))
         rbms[i][0].dh.normalize()
-        rbms[i][0].contrastiveDivergence(200, 1e-6, 0, mb[i], 10)
+        rbms[i][0].contrastiveDivergence(200, 1e-6, 0, 1, mb[i], 10)
         rbms[i][0].saveToFile('compareMB' + rbms[i][1])
+
+def compareCDkPCD():
+    rbms = []
+    names = ['PCD5', 'PCD10', 'CD1', 'CD3', 'CD5']
+
+    for i in range(5):
+        rbms.append((CCRBM.CCRBM(78, 64, 40, (5, 5)), names[i]))
+        # rbms[i][0].dh.readBrainWebData(resize=True, shape=(64, 64))
+        rbms[i][0].dh.readnpy(resize=True, shape=(78, 64))
+        rbms[i][0].dh.normalize()
+
+    rbms[0].persistantCD(200, 1e-6, pcdSteps=5, monitor=10)
+    rbms[0][0].saveToFile('compareL' + rbms[0][1])
+
+    rbms[1].persistantCD(200, 1e-6, pcdSteps=10, monitor=10)
+    rbms[1][0].saveToFile('compareL' + rbms[1][1])
+
+    rbms[2].contrastiveDivergence(200, 1e-6, 0, k=1, batchSize=10, monitor=10)
+    rbms[2][0].saveToFile('compareL' + rbms[2][1])
+
+    rbms[3].contrastiveDivergence(200, 1e-6, 0, k=3, batchSize=10, monitor=10)
+    rbms[3][0].saveToFile('compareL' + rbms[3][1])
+
+    rbms[4].contrastiveDivergence(200, 1e-6, 0, k=5, batchSize=10, monitor=10)
+    rbms[4][0].saveToFile('compareL' + rbms[4][1])
+
+    # save after training in case someting failed and script stopped!
+    # for i in range(5):
+    #     rbms[i][0].saveToFile('compareL' + rbms[i][1])
 
 
 def compareLRandMomentum():
@@ -60,31 +89,31 @@ def compareLRandMomentum():
     rbms.append((CCRBM.CCRBM(78, 64, 40, (5, 5)), 'LRM1'))
     rbms[-1][0].dh.readnpy(resize=True, shape=(78, 64))
     rbms[-1][0].dh.normalize()
-    rbms[-1][0].contrastiveDivergence(300, 1e-6, 0, 10, 10)
+    rbms[-1][0].contrastiveDivergence(300, 1e-6, 0, 1, 10, 10)
     rbms[-1][0].saveToFile('compareMB' + rbms[-1][1])
 
     rbms.append((CCRBM.CCRBM(78, 64, 40, (5, 5)), 'LRM2'))
     rbms[-1][0].dh.readnpy(resize=True, shape=(78, 64))
     rbms[-1][0].dh.normalize()
-    rbms[-1][0].contrastiveDivergence(100, 1e-7, 0, 10, 10)
-    rbms[-1][0].contrastiveDivergence(100, 1e-6, 0, 10, 10)
-    rbms[-1][0].contrastiveDivergence(100, 1e-6, 0, 10, 10)
+    rbms[-1][0].contrastiveDivergence(100, 1e-7, 0, 1, 10, 10)
+    rbms[-1][0].contrastiveDivergence(100, 1e-6, 0, 1, 10, 10)
+    rbms[-1][0].contrastiveDivergence(100, 1e-6, 0, 1, 10, 10)
     rbms[-1][0].saveToFile('compareMB' + rbms[-1][1])
 
     rbms.append((CCRBM.CCRBM(78, 64, 40, (5, 5)), 'LRM3'))
     rbms[-1][0].dh.readnpy(resize=True, shape=(78, 64))
     rbms[-1][0].dh.normalize()
-    rbms[-1][0].contrastiveDivergence(100, 1e-7, 0.9, 10, 10)
-    rbms[-1][0].contrastiveDivergence(100, 1e-6, 0.9, 10, 10)
-    rbms[-1][0].contrastiveDivergence(100, 1e-7, 0.9, 10, 10)
+    rbms[-1][0].contrastiveDivergence(100, 1e-7, 0.9, 1, 10, 10)
+    rbms[-1][0].contrastiveDivergence(100, 1e-6, 0.9, 1, 10, 10)
+    rbms[-1][0].contrastiveDivergence(100, 1e-7, 0.9, 1, 10, 10)
     rbms[-1][0].saveToFile('compareMB' + rbms[-1][1])
 
     rbms.append((CCRBM.CCRBM(78, 64, 40, (5, 5)), 'LRM4'))
     rbms[-1][0].dh.readnpy(resize=True, shape=(78, 64))
     rbms[-1][0].dh.normalize()
-    rbms[-1][0].contrastiveDivergence(100, 1e-6, 0.5, 10, 10)
-    rbms[-1][0].contrastiveDivergence(100, 1e-6, 0.9, 10, 10)
-    rbms[-1][0].contrastiveDivergence(100, 1e-7, 0.9, 10, 10)
+    rbms[-1][0].contrastiveDivergence(100, 1e-6, 0.5, 1, 10, 10)
+    rbms[-1][0].contrastiveDivergence(100, 1e-6, 0.9, 1, 10, 10)
+    rbms[-1][0].contrastiveDivergence(100, 1e-7, 0.9, 1, 10, 10)
     rbms[-1][0].saveToFile('compareMB' + rbms[-1][1])
 
 

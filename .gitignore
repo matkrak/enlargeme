@@ -1,9 +1,9 @@
-fortests.py
 RBMs/*
 __pycache__
 .idea/
 results/*
 compare*
-testlog*
 data/t10k*
 data/train*
+*.pyc
+results_old/

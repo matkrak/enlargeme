@@ -63,19 +63,19 @@ def compareCDkPCD():
         rbms[i][0].dh.readnpy(resize=True, shape=(78, 64))
         rbms[i][0].dh.normalize()
 
-    rbms[0].persistantCD(200, 1e-6, pcdSteps=5, monitor=10)
+    rbms[0][0].persistantCD(200, 1e-6, pcdSteps=5, monitor=10)
     rbms[0][0].saveToFile('compareL' + rbms[0][1])
 
-    rbms[1].persistantCD(200, 1e-6, pcdSteps=10, monitor=10)
+    rbms[1][0].persistantCD(200, 1e-6, pcdSteps=10, monitor=10)
     rbms[1][0].saveToFile('compareL' + rbms[1][1])
 
-    rbms[2].contrastiveDivergence(200, 1e-6, 0, k=1, batchSize=10, monitor=10)
+    rbms[2][0].contrastiveDivergence(200, 1e-6, 0, k=1, batchSize=10, monitor=10)
     rbms[2][0].saveToFile('compareL' + rbms[2][1])
 
-    rbms[3].contrastiveDivergence(200, 1e-6, 0, k=3, batchSize=10, monitor=10)
+    rbms[3][0].contrastiveDivergence(200, 1e-6, 0, k=3, batchSize=10, monitor=10)
     rbms[3][0].saveToFile('compareL' + rbms[3][1])
 
-    rbms[4].contrastiveDivergence(200, 1e-6, 0, k=5, batchSize=10, monitor=10)
+    rbms[4][0].contrastiveDivergence(200, 1e-6, 0, k=5, batchSize=10, monitor=10)
     rbms[4][0].saveToFile('compareL' + rbms[4][1])
 
     # save after training in case someting failed and script stopped!

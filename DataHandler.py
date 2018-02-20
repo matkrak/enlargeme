@@ -101,7 +101,7 @@ class DataHandler:
 
         print('Loaded Brainweb data. Image shape: (H, W) = ' + str(self.shape))
         print('Trainset size: ' + str(self.tr_size))
-        print('Tetset size:   ' + str(self.te_size))
+        print('Testset size:   ' + str(self.te_size))
         logger.info('Loaded Brainweb data. Image shape: (H, W) = {}, train set size: {}, test set size: {}'.format(self.shape, self.tr_size, self.te_size))
 
     def readnpy(self, img_path=BRAINWEB_NPY, resize=None, shape=None, train_test_ratio=20): # TODO double check normalization (make it +-1)

@@ -147,11 +147,12 @@ class CCRBM:
             tmp += convolve2d(self.h[feature_map], self.W[feature_map])
         self.v = tmp + self.c
 
-    def batchMSE(self, batchSize=None, steps=3):
+    def batchMSE(self, batchSize=None, steps=3, sample=False):
         """
         Mean Squared Error calculated over test set
         :param batchSize: how many images? All test set by default
         :param steps: how many Gibbs steps before calculating MSE
+        :param sample: sample values if True, takes probabilies otherwise
         :return: Mean Squared Error over images from testset
         """
         if self.dh.train is None:
@@ -163,12 +164,16 @@ class CCRBM:
             self.loadImage(i, dataset='test')
             v0 = np.copy(self.v)
             for j in range(steps):
-                self.sample_h_given_v()
-                self.sample_v_given_h()
+                if sample:
+                    self.sample_h_given_v()
+                    self.sample_v_given_h()
+                else:
+                    self.prob_h_given_v()
+                    self.prob_v_given_h()
             mse += ((self.v - v0) ** 2).mean()
         return mse / batchSize
 
-    def contrastiveDivergence(self, iterations, lrate, batchSize=10, monitor=10):
+    def contrastiveDivergence(self, iterations, lrate, momentum, batchSize=10, monitor=10):
         """
         Contrastive divergence - 1 implemented with mini batch. Perform given number of iterations to train
         CCRBM with given learning rate. Use provided batchSize. Monitor MSE every X steps using monitor parameter.
@@ -181,18 +186,23 @@ class CCRBM:
         # cshape = (self.insize_v, self.insize_h)
 
         print('Starting Contrastive Divergence with following parameters:\n' \
-              'iterations = {}, learnig rate = {}, batch size = {}, monitor = {}'.format(iterations, lrate, batchSize,
+              'iterations = {}, learnig rate = {}, momentum = {}, batch size = {}, monitor = {}'.format(iterations, lrate, momentum, batchSize,
                                                                                          monitor))
         logger.info('Contrastive Divergence called for CCRBM: {}'.format(self) +
-                 ' iterations = {}, lrate = {}, batchSize = {}, monitor = {}'.format(iterations, lrate,
-                                                                                     batchSize, monitor))
+                 'iterations = {}, learnig rate = {}, momentum = {}, batch size = {}, monitor = {}'.format(iterations, lrate, momentum, batchSize,
+                                                                                         monitor))
         imgcounter = 0
+
+        dW_old = [0 for i in range(self.filters_no)]
+        db_old = [0 for i in range(self.filters_no)]
+        dc_old = 0
 
         for it in range(self.iterations, self.iterations + iterations):
 
             dW = [np.zeros(shape=self.W[0].shape, dtype=np.float32) for i in range(self.filters_no)]
             db = [0 for i in range(self.filters_no)]
             dc = 0
+
 
             for batchidx in range(batchSize):
                 if imgcounter == self.dh.tr_size:
@@ -228,9 +238,13 @@ class CCRBM:
                     dc += (v0 - self.v)
 
             for k in range(self.filters_no):
-                self.W[k] += (lrate / batchSize) * dW[k]
-                self.b[k] += (lrate / batchSize) * db[k]
-            self.c += (lrate / batchSize) * dc
+                self.W[k] += (lrate / batchSize) * dW[k] + dW_old[k] * momentum
+                self.b[k] += (lrate / batchSize) * db[k] + db_old[k] * momentum
+                dW_old[k] = (lrate / batchSize) * dW[k] + dW_old[k] * momentum
+                db_old[k] = (lrate / batchSize) * db[k] + db_old[k] * momentum
+
+            self.c += (lrate / batchSize) * dc + dc_old * momentum
+            dc_old = (lrate / batchSize) * dc + dc_old * momentum
 
             if not it % monitor:
                 if not self.mse:
@@ -353,10 +367,11 @@ class CCRBM:
         self.v = image
         self.imgInfo = (dataset, imgNo)
 
-    def displayV(self, normalize=True):
+    def displayV(self, normalize=True, retImage=False):
         """
         Display visible layer. Use normalize=True when using images from self.dh.
         :param normalize: Use if displaying images from self.dh
+        :param retImage: if True will return V as PIL.Image. If False, will display V
         """
         if normalize:
             if self.imgInfo is not None:
@@ -374,9 +389,13 @@ class CCRBM:
                 im = Image.fromarray(self.v)
         else:
             im = Image.fromarray(self.v)
-        im.show()
 
-    def displayFilters(self, fshape=None, itpl=False):
+        if not retImage:
+            im.show()
+        else:
+            return im
+
+    def displayFilters(self, fshape=None, itpl=False, howmany=None):
         """
         Display filters of CCRBM.
         :param fshape: tuple, grid size. i.e. for 40 filters can be (8, 5)
@@ -390,12 +409,17 @@ class CCRBM:
                 fshape[1] -= 1
 
         plt.subplot(fshape[0], fshape[1], 1)
-        for i in range(len(self.W)):
+        for i in range(len(self.W) if howmany is None else howmany):
             plt.subplot(fshape[0], fshape[1], i + 1)
             if itpl:
                 plt.imshow(self.W[i], cmap='gray', interpolation='bilinear')
+
             else:
                 plt.imshow(self.W[i], cmap='gray')
+            # plt.title('# ' + str(i + 1))
+            plt.xticks([])
+            plt.yticks([])
+
         fig.show()
 
     def displayC(self):

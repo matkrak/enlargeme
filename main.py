@@ -69,6 +69,9 @@ def handleLogFile(filename, choice=None, loggingLevel=LOGGING_LEVEL):
 
 if __name__ == '__main__':
     # print('Tell me what to do!')
-    handleLogFile('comparelog.log')
-    compareFiltersNo()
-    compareMatrixScalar()
+    handleLogFile('compareLRM.log')
+    # compareFiltersNo()
+    # compareMatrixScalar()
+    # compareConvFilterSize()
+    # compareMiniBatchSize()
+    compareLRandMomentum()

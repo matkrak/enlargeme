@@ -117,6 +117,26 @@ def compareLRandMomentum():
     rbms[-1][0].saveToFile('compareMB' + rbms[-1][1])
 
 
+def trainAwesomeCCRBMs():
+    awesomeRBM_CD = CCRBM.CCRBM(78, 64, 40, (5, 5))
+    awesomeRBM_CD.dh.readnpy(resize=True, shape=(78, 64))
+    awesomeRBM_CD.dh.normalize()
+
+    awesomeRBM_PCD = CCRBM.CCRBM(78, 64, 40, (5, 5))
+    awesomeRBM_PCD.dh.readnpy(resize=True, shape=(78, 64))
+    awesomeRBM_PCD.dh.normalize()
+
+    awesomeRBM_CD.contrastiveDivergence(100, 1e-6, 0.5, 1, 10, 10)
+    awesomeRBM_CD.contrastiveDivergence(200, 1e-6, 0.9, 1, 10, 10)
+    awesomeRBM_CD.contrastiveDivergence(200, 1e-7, 0.9, 1, 10, 10)
+    awesomeRBM_CD.saveToFile('awesomeRBM_CD')
+
+    awesomeRBM_PCD.persistantCD(100, 1e-6, 0.5, 10, 10)
+    awesomeRBM_PCD.persistantCD(200, 1e-6, 0.9, 10, 10)
+    awesomeRBM_PCD.persistantCD(200, 1e-7, 0.9, 10, 10)
+    awesomeRBM_PCD.saveToFile('awesomeRBM_PCD')
+
+
 def compareMSE(rbms, labels=None):
     f = plt.figure()
     if labels is not None:

@@ -261,7 +261,7 @@ class CCRBM:
         print('Iter: {}   MSE: {}'.format(*self.mse[-1]))
         logger.info('Iter: {}   MSE: {}'.format(*self.mse[-1]))
 
-    def persistantCD(self, iterations, lrate, pcdSteps=5, monitor=10):
+    def persistantCD(self, iterations, lrate, momentum, pcdSteps=5, monitor=10):
         """
         Persistant contrastive divergence - 1 implemented with mini batch. Perform given number of iterations to train
         CCRBM with given learning rate. Weights update every pscSteps steps. Monitor MSE every X steps using monitor parameter.
@@ -274,11 +274,14 @@ class CCRBM:
         # cshape = (self.insize_v, self.insize_h)
         # mse = []
         print('Starting Persistant Contrastive Divergence with following parameters:\n' \
-              'iterations = {}, learning rate = {}, pcd steps = {}, monitor = {}'.format(iterations, lrate, pcdSteps,
+              'iterations = {}, learning rate = {}, momentum = {}, pcd steps = {}, monitor = {}'.format(iterations, lrate, momentum, pcdSteps,
                                                                                          monitor))
         logger.info('Persistant Contrastive Divergence called for CCRBM: {}'.format(self) +
-                 ' iterations = {}, lrate = {}, pcdSteps = {}, monitor = {}'.format(iterations, lrate,
-                                                                                    pcdSteps, monitor))
+                 'iterations = {}, learning rate = {}, momentum = {}, pcd steps = {}, monitor = {}'.format(iterations, lrate, momentum, pcdSteps,
+                                                                                         monitor))
+        dW_old = [0 for i in range(self.filters_no)]
+        db_old = [0 for i in range(self.filters_no)]
+        dc_old = 0
         imgcounter = 0
         for it in range(self.iterations, self.iterations + iterations):
 
@@ -323,9 +326,14 @@ class CCRBM:
                     dc += (v0 - self.v)
 
             for k in range(self.filters_no):
+                self.W[k] += (lrate / pcdSteps) * dW[k] + dW_old[k] * momentum
+                self.b[k] += (lrate / pcdSteps) * db[k] + db_old[k] * momentum
+                dW_old[k] = (lrate / pcdSteps) * dW[k] + dW_old[k] * momentum
+                db_old[k] = (lrate / pcdSteps) * db[k] + db_old[k] * momentum
                 self.W[k] += (lrate / pcdSteps) * dW[k]
                 self.b[k] += (lrate / pcdSteps) * db[k]
             self.c += (lrate / pcdSteps) * dc
+            dc_old = (lrate / pcdSteps) * dc + dc_old * momentum
 
             if not it % monitor:
                 if not self.mse:

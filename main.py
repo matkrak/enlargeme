@@ -69,10 +69,11 @@ def handleLogFile(filename, choice=None, loggingLevel=LOGGING_LEVEL):
 
 if __name__ == '__main__':
     # print('Tell me what to do!')
-    handleLogFile('compareCDkPCD.log')
+    handleLogFile('awesomeRBM.log')
     # compareFiltersNo()
     # compareMatrixScalar()
     # compareConvFilterSize()
     # compareMiniBatchSize()
     # compareLRandMomentum()
-    compareCDkPCD()
+    # compareCDkPCD()
+    trainAwesomeCCRBMs()
